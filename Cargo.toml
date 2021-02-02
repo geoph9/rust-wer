@@ -1,5 +1,5 @@
 [package]
-name = "rust-ide"
+name = "rust-wer"
 version = "0.1.0"
 authors = ["geoph9 <geoph9@protonmail.com>"]
 edition = "2018"

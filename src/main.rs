@@ -11,14 +11,17 @@ use clap::{Arg, App};
 
 
 // Takes into lists of words and not lists of sentences [u16;
-fn wer(refer: &Vec<String>, hypoth: &Vec<String>) -> usize {
+fn wer(hypothesis: &Vec<String>, reference: &Vec<String>) -> f32 {
     // Edit distance
     // const N: u16 = refer.len();
     // const M: u16 = hypoth.len();
     // let mut D = [[0_usize; N]; M];
-    let mut d = vec![vec![0_usize; hypoth.len()]; refer.len()];
-    for i in 0..refer.len() {
-        for j in 0..hypoth.len() {
+    if hypothesis.len() == 0 {
+        return 1_f32
+    }
+    let mut d = vec![vec![0_usize; hypothesis.len()+1]; reference.len()+1];
+    for i in 0..(reference.len()+1) {
+        for j in 0..(hypothesis.len()+1) {
             if i == 0 {
                 d[0][j] = j;
             } else if j == 0 {
@@ -27,18 +30,18 @@ fn wer(refer: &Vec<String>, hypoth: &Vec<String>) -> usize {
         }
     }
 
-    for i in 1..refer.len() {
-        for j in 1..hypoth.len() {
-            if refer[i-1] == hypoth[j-1] {
+    for i in 1..(reference.len()+1) {
+        for j in 1..(hypothesis.len()+1) {
+            if reference[i-1] == hypothesis[j-1] {
                 d[i][j] = d[i-1][j-1];
             } else {
-                // Array of sub, ins, del
+                // Array of substitutions, insertions, deletions
                 let tmp = [d[i-1][j-1] + 1, d[i][j-1] + 1, d[i-1][j] + 1];
                 d[i][j] = *tmp.iter().min().unwrap();
             }
         }
     }
-    d[refer.len()-1][hypoth.len()-1]
+    d[reference.len()][hypothesis.len()] as f32 / reference.len() as f32
 }
 
 fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
@@ -76,10 +79,9 @@ fn main() {
     let original_transcript = lines_from_file(
         matches.value_of("TRUE_TRANSCRIPT").unwrap()
     );
-    // let ref_test = "What a bright day man".split_whitespace().map(|s| s.to_string()).collect();
-    // let hyp_test = "What a bright".split_whitespace().map(|s| s.to_string()).collect();
-    // let test = wer(ref_test, hyp_test);
-
+    // let ref_test = "yes core yes".split_whitespace().map(|s| s.to_string()).collect();
+    // let hyp_test = "yes correct".split_whitespace().map(|s| s.to_string()).collect();
+    // let test = wer(&ref_test, &hyp_test);
     // println!("GOT A TEST RESULT: {:?}", test);
     assert_eq!(my_transcriptions.len(), original_transcript.len());
     let mytrans: Vec<Vec<String>> = c![sent.split_whitespace()
@@ -94,9 +96,11 @@ fn main() {
         .iter()
         .zip(truth.iter())
         .map(|(x, y)| wer(x, y))
-        .collect::<Vec<usize>>();
+        .collect::<Vec<f32>>();
     println!("WER VECTORS: {:?}", wer_vectors);
-    let final_wer = wer_vectors.iter().sum::<usize>() as f32 / wer_vectors.len() as f32;
+    println!("SUM OF WERS: {:?}", wer_vectors.iter().sum::<f32>());
+    println!("LEN OF WERS: {:?}", wer_vectors.len());
+    let final_wer = wer_vectors.iter().sum::<f32>() / wer_vectors.len() as f32;
     println!("THE WER IS: {:?}", final_wer);
 
 
