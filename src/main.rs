@@ -16,7 +16,8 @@ fn wer(refer: Vec<String>, hypoth: Vec<String>) -> usize {
     // const N: u16 = refer.len();
     // const M: u16 = hypoth.len();
     // let mut D = [[0_usize; N]; M];
-    let mut D = vec![vec![0_usize; refer.len()]; hypoth.len()];
+    let mut D = vec![vec![0_usize; hypoth.len()]; refer.len()];
+    println!("D IS: {:?}", D);
     for i in 0..refer.len() {
         for j in 0..hypoth.len() {
             if i == 0 {
@@ -45,8 +46,8 @@ fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
     let file = File::open(filename).expect("no such file");
     let buf = BufReader::new(file);
     buf.lines()
-        .map(|l| l.expect("Could not parse line"))
-        .collect()
+       .map(|l| l.expect("Could not parse line"))
+       .collect()
 }
 
 fn main() {
@@ -81,8 +82,8 @@ fn main() {
     let mut original_transcript = lines_from_file(
         matches.value_of("TRUE_TRANSCRIPT").unwrap()
     );
-    let ref_test = "What a bright day".split_whitespace().map(|s| s.to_string()).collect();
-    let hyp_test = "What a bright day".split_whitespace().map(|s| s.to_string()).collect();
+    let ref_test = "What a bright day man".split_whitespace().map(|s| s.to_string()).collect();
+    let hyp_test = "What a bright".split_whitespace().map(|s| s.to_string()).collect();
     let test = wer(ref_test, hyp_test);
 
     println!("GOT A TEST RESULT: {:?}", test);
