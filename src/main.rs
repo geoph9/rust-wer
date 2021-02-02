@@ -73,18 +73,20 @@ fn main() {
                                        .multiple(true)
                                        .help("Sets the level of verbosity"))
                                   .get_matches();
+    // Read the transcripts and convert to a vector of strings
     let my_transcriptions = lines_from_file(
         matches.value_of("MY_TRANSCRIPT").unwrap()
     );
+    // Read the true labels and convert to a vector of strings
     let original_transcript = lines_from_file(
         matches.value_of("TRUE_TRANSCRIPT").unwrap()
     );
-    // let ref_test = "yes core yes".split_whitespace().map(|s| s.to_string()).collect();
-    // let hyp_test = "yes correct".split_whitespace().map(|s| s.to_string()).collect();
-    // let test = wer(&ref_test, &hyp_test);
-    // println!("GOT A TEST RESULT: {:?}", test);
+
+    // Make sure that both texts have the same number of lines.
+    // The texts should match 1-1.
     assert_eq!(my_transcriptions.len(), original_transcript.len());
-    let mytrans: Vec<Vec<String>> = c![sent.split_whitespace()
+    // Split the sentences (on space) and save the result in a vector of vectors of the words
+    let my_transcripts: Vec<Vec<String>> = c![sent.split_whitespace()
                                            .map(|s| s.to_string())
                                            .collect::<Vec<String>>(),
                                        for sent in my_transcriptions];
@@ -92,16 +94,15 @@ fn main() {
                                          .map(|s| s.to_string())
                                          .collect::<Vec<String>>(),
                                      for sent in original_transcript];
-    let wer_vectors = mytrans
+    // Get the wer scores for each sentence couple
+    let wer_vectors = my_transcripts
         .iter()
         .zip(truth.iter())
         .map(|(x, y)| wer(x, y))
         .collect::<Vec<f32>>();
-    println!("WER VECTORS: {:?}", wer_vectors);
-    println!("SUM OF WERS: {:?}", wer_vectors.iter().sum::<f32>());
-    println!("LEN OF WERS: {:?}", wer_vectors.len());
+    // Simply average the WER scores
     let final_wer = wer_vectors.iter().sum::<f32>() / wer_vectors.len() as f32;
-    println!("THE WER IS: {:?}", final_wer);
+    println!("Output WER: {:?}", final_wer);
 
 
 }
