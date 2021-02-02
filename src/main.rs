@@ -6,24 +6,23 @@ use std::{
     fs::File,
     io::{prelude::*, BufReader},
     path::Path,
-    process::exit,
 };
-use clap::{Arg, App, SubCommand};
+use clap::{Arg, App};
+
 
 // Takes into lists of words and not lists of sentences [u16;
-fn wer(refer: Vec<String>, hypoth: Vec<String>) -> usize {
+fn wer(refer: &Vec<String>, hypoth: &Vec<String>) -> usize {
     // Edit distance
     // const N: u16 = refer.len();
     // const M: u16 = hypoth.len();
     // let mut D = [[0_usize; N]; M];
-    let mut D = vec![vec![0_usize; hypoth.len()]; refer.len()];
-    println!("D IS: {:?}", D);
+    let mut d = vec![vec![0_usize; hypoth.len()]; refer.len()];
     for i in 0..refer.len() {
         for j in 0..hypoth.len() {
             if i == 0 {
-                D[0][j] = j;
+                d[0][j] = j;
             } else if j == 0 {
-                D[i][0] = i;
+                d[i][0] = i;
             }
         }
     }
@@ -31,19 +30,19 @@ fn wer(refer: Vec<String>, hypoth: Vec<String>) -> usize {
     for i in 1..refer.len() {
         for j in 1..hypoth.len() {
             if refer[i-1] == hypoth[j-1] {
-                D[i][j] = D[i-1][j-1];
+                d[i][j] = d[i-1][j-1];
             } else {
                 // Array of sub, ins, del
-                let tmp = [D[i-1][j-1] + 1, D[i][j-1] + 1, D[i-1][j] + 1];
-                D[i][j] = *tmp.iter().min().unwrap();
+                let tmp = [d[i-1][j-1] + 1, d[i][j-1] + 1, d[i-1][j] + 1];
+                d[i][j] = *tmp.iter().min().unwrap();
             }
         }
     }
-    D[refer.len()-1][hypoth.len()-1]
+    d[refer.len()-1][hypoth.len()-1]
 }
 
 fn lines_from_file(filename: impl AsRef<Path>) -> Vec<String> {
-    let file = File::open(filename).expect("no such file");
+    let file = File::open(filename).expect("No such file.");
     let buf = BufReader::new(file);
     buf.lines()
        .map(|l| l.expect("Could not parse line"))
@@ -71,23 +70,34 @@ fn main() {
                                        .multiple(true)
                                        .help("Sets the level of verbosity"))
                                   .get_matches();
-    println!("The first argument is {}", matches.value_of("MY_TRANSCRIPT").unwrap());
-    // if args.len() != 2 {
-    //     println!("You should provide 2 arguments:\n\t1. Your transcripts\n\t2. The original text");
-    //     exit(1);
-    // }
-    let mut my_transcriptions = lines_from_file(
+    let my_transcriptions = lines_from_file(
         matches.value_of("MY_TRANSCRIPT").unwrap()
     );
-    let mut original_transcript = lines_from_file(
+    let original_transcript = lines_from_file(
         matches.value_of("TRUE_TRANSCRIPT").unwrap()
     );
-    let ref_test = "What a bright day man".split_whitespace().map(|s| s.to_string()).collect();
-    let hyp_test = "What a bright".split_whitespace().map(|s| s.to_string()).collect();
-    let test = wer(ref_test, hyp_test);
+    // let ref_test = "What a bright day man".split_whitespace().map(|s| s.to_string()).collect();
+    // let hyp_test = "What a bright".split_whitespace().map(|s| s.to_string()).collect();
+    // let test = wer(ref_test, hyp_test);
 
-    println!("GOT A TEST RESULT: {:?}", test);
+    // println!("GOT A TEST RESULT: {:?}", test);
+    assert_eq!(my_transcriptions.len(), original_transcript.len());
+    let mytrans: Vec<Vec<String>> = c![sent.split_whitespace()
+                                           .map(|s| s.to_string())
+                                           .collect::<Vec<String>>(),
+                                       for sent in my_transcriptions];
+    let truth: Vec<Vec<String>> = c![sent.split_whitespace()
+                                         .map(|s| s.to_string())
+                                         .collect::<Vec<String>>(),
+                                     for sent in original_transcript];
+    let wer_vectors = mytrans
+        .iter()
+        .zip(truth.iter())
+        .map(|(x, y)| wer(x, y))
+        .collect::<Vec<usize>>();
+    println!("WER VECTORS: {:?}", wer_vectors);
+    let final_wer = wer_vectors.iter().sum::<usize>() as f32 / wer_vectors.len() as f32;
+    println!("THE WER IS: {:?}", final_wer);
 
-    // let vec: Vec<f32> = c![wer(sent.split(" ")), for sent in my_transcriptions];
 
 }
