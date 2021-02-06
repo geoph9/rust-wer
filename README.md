@@ -48,6 +48,14 @@ time python main.py ./data/mytranscripts.txt ./data/truth.txt
 
 While this took `0.149` seconds. So, even with such a small example the execution-time difference is huge.
 
+#### Using Julia
+
+I also wanted to see how julia performs on the same task and so I created the `juliawer` project. By running the 
+`juliawer.jl` with `julia`, it takes more than a second which is way worse than the above two executions and I am 
+not sure why.
+
+I also tried using `PackageCompiler` in order to compile the julia code but the result did not change.
+
 ## TODO:
 - Change input file format (json?)
 - Maybe handle punctuations/lowercase
